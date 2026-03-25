@@ -1,21 +1,33 @@
 # Laravel Commerce API
 
-Progetto di esempio di un backend e-commerce sviluppato con **Laravel 12**, **RESTful API**, **Sanctum** per autenticazione e gestione prodotti con upload immagini.
+Backend e-commerce sviluppato con **Laravel 12**, **REST API**, **Sanctum** e una UI Blade leggera che consuma esclusivamente le API.
 
 ---
 
 ## Features
 
-- Autenticazione API con **Sanctum** (register, login, logout)
-- CRUD completo per i prodotti:
-    - Creazione, lettura, aggiornamento e cancellazione
-    - Validazione dei dati
-    - Upload immagini prodotto
-- Struttura RESTful per tutte le API
-- Protezione endpoint con middleware `auth:sanctum`
-- Blade come pannello admin leggero (interfaccia)
-- Preparato per integrazione futura con ordini e pagamenti
-- Repository pronto per estensione e integrazione front-end o app mobile
+- Autenticazione API con Sanctum (`register`, `login`, `logout`)
+- CRUD prodotti con validazione e upload immagine
+- Soft delete prodotti
+- Gestione ordini completa:
+  - Creazione ordine con `DB::transaction`
+  - Righe ordine con prezzo storico (`order_items.price`)
+  - Controllo e decremento stock
+  - Simulazione pagamento ordine
+- Stati ordine centralizzati con enum:
+  - `pending`, `paid`, `shipped`, `cancelled`
+- API Resource per output pulito (`OrderResource`, `OrderItemResource`)
+- Service layer (`OrderService`) con controller sottili
+- Sicurezza ownership: ogni utente vede/paga solo i propri ordini
+- Eventi dominio:
+  - `OrderCreated`
+  - `OrderPaid`
+- Logging operazioni ordini
+- UUID ordine esposto in API (oltre all'id)
+- UI Blade moderna, responsive e API-first per:
+  - auth
+  - prodotti
+  - ordini (lista, creazione, dettaglio, pagamento)
 
 ---
 
@@ -23,8 +35,8 @@ Progetto di esempio di un backend e-commerce sviluppato con **Laravel 12**, **RE
 
 - PHP 8+ / Laravel 12
 - MySQL
-- Blade (frontend leggero)
-- Sanctum (autenticazione token)
+- Blade (frontend API-first)
+- Sanctum (token auth)
 - Storage Laravel per immagini
 - Postman consigliato per test API
 
@@ -34,28 +46,38 @@ Progetto di esempio di un backend e-commerce sviluppato con **Laravel 12**, **RE
 
 1. Clona il repository:
 
+```bash
 git clone <tuo-repo-url>
 cd laravel-commerce-api
+```
 
 2. Installa dipendenze:
 
+```bash
 composer install
 npm install && npm run dev
+```
 
 ## Configura Database
 
+```env
 DB_DATABASE=laravel_commerce_api
 DB_USERNAME=root
 DB_PASSWORD=
+```
 
 ## Migra database e crea symbolic link per storage
 
+```bash
 php artisan migrate
 php artisan storage:link
+```
 
 ## Avvia server
 
+```bash
 php artisan serve
+```
 
 ---
 
@@ -73,23 +95,64 @@ Tutte le rotte API sono protette da token Sanctum (tranne register/login).
 
 ### Products
 
-| Metodo | Endpoint           | Descrizione                     |
-| ------ | ------------------ | ------------------------------- |
-| GET    | /api/products      | Lista prodotti                  |
-| GET    | /api/products/{id} | Dettaglio prodotto              |
-| POST   | /api/products      | Crea prodotto (upload immagine) |
-| PUT    | /api/products/{id} | Aggiorna prodotto               |
-| DELETE | /api/products/{id} | Cancella prodotto               |
+| Metodo | Endpoint           | Descrizione                      |
+| ------ | ------------------ | -------------------------------- |
+| GET    | /api/products      | Lista prodotti                   |
+| GET    | /api/products/{id} | Dettaglio prodotto               |
+| POST   | /api/products      | Crea prodotto (upload immagine)  |
+| PUT    | /api/products/{id} | Aggiorna prodotto                |
+| DELETE | /api/products/{id} | Soft delete prodotto             |
 
-> **Nota:** per POST/PUT con immagini usare `form-data` in Postman.  
-> Per ottenere l’immagine completa via API, usare `$product->image_url` (accessor nel model).
+### Orders
+
+| Metodo | Endpoint              | Descrizione                               |
+| ------ | --------------------- | ----------------------------------------- |
+| POST   | /api/orders           | Crea ordine                               |
+| GET    | /api/orders           | Lista ordini utente autenticato           |
+| GET    | /api/orders/{id}      | Dettaglio ordine (id o uuid)              |
+| POST   | /api/orders/{id}/pay  | Simulazione pagamento (da pending a paid) |
+
+---
+
+## UI Frontend (Blade)
+
+Pagine disponibili:
+
+- `/login`
+- `/logout`
+- `/products`
+- `/products/new`
+- `/orders`
+- `/orders/new`
+- `/orders/{id}`
+
+La UI usa soltanto le API (`/api/*`) con token salvato in `localStorage`.
+
+---
+
+## Architettura Backend
+
+- `app/Services/OrderService.php`: logica core ordini/pagamento
+- `app/Http/Requests/CreateOrderRequest.php`: validazione creazione ordine
+- `app/Http/Resources/OrderResource.php`: serializzazione ordine
+- `app/Http/Resources/OrderItemResource.php`: serializzazione righe + prodotto
+- `app/Enums/OrderStatus.php`: stati ordine
+- `app/Events/OrderCreated.php`, `app/Events/OrderPaid.php`: eventi dominio
+
+---
+
+## Note Migrazioni
+
+- `orders.status` viene creato come stringa con default `pending`
+- Su database già migrati, la migration di alter converte il campo in enum MySQL con i valori previsti
+- Soft delete prodotti aggiunto con migration dedicata
 
 ---
 
 ## Contributi
 
 Progetto personale, aperto a suggerimenti.  
-Segui la struttura RESTful e gli standard Laravel per aggiungere nuove funzionalità.
+Segui la struttura RESTful e gli standard Laravel per estendere funzionalità e UI.
 
 ## Autore
 
