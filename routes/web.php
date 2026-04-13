@@ -7,6 +7,7 @@ Route::get('/', function () {
 });
 
 Route::view('/login', 'auth.login')->name('ui.login');
+Route::view('/register', 'auth.register')->name('ui.register');
 Route::view('/logout', 'auth.logout')->name('ui.logout');
 Route::view('/products', 'products.index')->name('ui.products.index');
 Route::view('/products/new', 'products.create')->name('ui.products.create');

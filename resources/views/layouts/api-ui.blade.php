@@ -395,6 +395,7 @@
             <div class="brand">{{ config('app.name', 'Laravel') }} API UI</div>
             <div class="nav">
                 <a href="{{ route('ui.login') }}">Login</a>
+                <a href="{{ route('ui.register') }}">Registrati</a>
                 <a href="{{ route('ui.products.index') }}">Prodotti</a>
                 <a href="{{ route('ui.products.create') }}">Nuovo prodotto</a>
                 <a href="{{ route('ui.orders.index') }}">Ordini</a>

@@ -1,14 +1,19 @@
 @extends('layouts.api-ui')
 
-@section('title', 'Login API')
+@section('title', 'Registrazione API')
 
 @section('content')
-    <h1>Login</h1>
-    <p class="page-subtitle">Questa pagina usa esclusivamente l'endpoint API <code>POST /api/login</code>.</p>
+    <h1>Registrazione</h1>
+    <p class="page-subtitle">Questa pagina usa esclusivamente l'endpoint API <code>POST /api/register</code>.</p>
 
     <div id="message" class="alert"></div>
 
-    <form id="login-form">
+    <form id="register-form">
+        <div class="field">
+            <label for="name">Nome</label>
+            <input type="text" id="name" name="name" placeholder="Il tuo nome" required>
+        </div>
+
         <div class="field">
             <label for="email">Email</label>
             <input type="email" id="email" name="email" placeholder="esempio@email.com" required>
@@ -16,14 +21,12 @@
 
         <div class="field">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" minlength="6" required>
+            <input type="password" id="password" name="password" minlength="8" required>
         </div>
 
         <div class="actions">
-            <button type="submit" class="btn">Accedi</button>
-            <a href="{{ route('ui.register') }}" class="btn btn-secondary">Registrati</a>
-            <a href="{{ route('ui.products.index') }}" class="btn btn-secondary">Vai ai
-                prodotti</a>
+            <button type="submit" class="btn">Registrati</button>
+            <a href="{{ route('ui.login') }}" class="btn btn-secondary">Hai già un account? Accedi</a>
         </div>
     </form>
 
@@ -34,7 +37,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const axios = window.axios;
-            const form = document.getElementById('login-form');
+            const form = document.getElementById('register-form');
             const message = document.getElementById('message');
             const tokenStatus = document.getElementById('token-status');
 
@@ -63,7 +66,7 @@
                     return Object.values(error.response.data.errors).flat().join(' ');
                 }
 
-                return 'Errore inatteso durante il login.';
+                return 'Errore inatteso durante la registrazione.';
             }
 
             form.addEventListener('submit', async function(event) {
@@ -71,15 +74,16 @@
                 message.className = 'alert';
 
                 const payload = {
+                    name: form.name.value,
                     email: form.email.value,
                     password: form.password.value,
                 };
 
                 try {
-                    const response = await axios.post('/api/login', payload);
+                    const response = await axios.post('/api/register', payload);
                     localStorage.setItem('api_token', response.data.token);
                     localStorage.setItem('api_user', JSON.stringify(response.data.user));
-                    showMessage('Login eseguito correttamente. Reindirizzamento...', 'success');
+                    showMessage('Registrazione eseguita correttamente. Reindirizzamento...', 'success');
 
                     setTimeout(function() {
                         window.location.href = '{{ route('ui.products.index') }}';
